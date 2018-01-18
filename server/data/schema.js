@@ -58,6 +58,9 @@ const schema = [`
     createMessage(
       text: String!, userId: String!, groupId: String!
     ): Message
+
+    #mark a todo complete or incomplete
+    markTodo(id: ID!): todo
   }
 
   schema {

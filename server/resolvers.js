@@ -51,6 +51,13 @@ export const Resolvers = {
       }).then((message) => {
         return message
       })
+    },
+    markTodo(root, {id}) {
+      return Todo.findById(id).then((todo) => {
+        todo.set('completed',!todo.completed);
+        todo.save();
+        return todo;
+      })
     }
   },
   Group: {

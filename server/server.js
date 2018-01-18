@@ -22,10 +22,10 @@ const GRAPHQL_PORT = 8000;
 
 app.use(bodyParser.json());
 
-const mockExeSchema = makeExecutableSchema({
-  typeDefs: schema,
-  resolvers: MockResolvers,
-});
+//const mockExeSchema = makeExecutableSchema({
+//  typeDefs: schema,
+//  resolvers: MockResolvers,
+//});
 
 const executableSchema = makeExecutableSchema({
   typeDefs: schema,
@@ -33,28 +33,25 @@ const executableSchema = makeExecutableSchema({
 });
 
 //Comment out or remove the code below when using REAL DATA
+
 //addMockFunctionsToSchema({
 //  schema: mockExeSchema,
 //  mocks: Mocks,
 //  preserveResolvers: true,
 //});
 
-app.use('/testql', graphqlExpress((req) => {
-  return {
-    schema: mockExeSchema,
-    context: {},
-  };
-}));
+//app.use('/testql', graphqlExpress({
+//  schema: mockExeSchema,
+//  context: {},
+//}));
 
-app.use('/testiql', graphiqlExpress({
-  endpointURL: '/testql',
-}));
+//app.use('/testiql', graphiqlExpress({
+//  endpointURL: '/testql',
+//}));
 
-app.use('/graphql', graphqlExpress((req) => {
-  return {
-    schema: executableSchema,
-    context: {},
-  };
+app.use('/graphql', graphqlExpress({
+  schema: executableSchema,
+  context: {},
 }));
 
 app.use('/graphiql', graphiqlExpress({

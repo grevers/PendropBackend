@@ -153,6 +153,16 @@ export const MockResolvers = {
       };
       Messages.push(message);
       return message;
+    },
+
+    markTodo(root, {id}) {
+      function isId(todo) {
+        return todo.id === id;
+      }
+      return Todo.find(isId).then((todo) => {
+        todo.completed = !todo.completed;
+        return todo;
+      })
     }
   },
   Group: {
