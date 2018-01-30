@@ -36,7 +36,10 @@ export const Resolvers = {
       return Message.find({ $or: [{'groupId': groupId},{'userId': userId}]});
     },
     user(root, {id,email}) {
-      return User.findOne({ $or: [ { 'email': email}, {'_id': id} ] });
+      return User.findOne({ $or: [ { 'email': email}, {'_id': id} ] }).then((user) =>{
+        console.log(user);
+        return user;
+      });
     },
     todo(root,{id}) {
       return Todo.findById(id);
@@ -124,6 +127,7 @@ export const Resolvers = {
     todos(user) {
       return User.findById(user.id).populate('todos').exec()
       .then((user) => {
+        console.log(user.todos);
         return user.todos;
       });
     },

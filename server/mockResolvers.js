@@ -75,13 +75,13 @@ Groups.forEach((group) => {
     _.times(TODOS_PER_USER, () => {
       let todo = {
         id: (Math.floor(Math.random()*100)+300).toString(16),
+        title: faker.lorem.words(2),
         text: faker.lorem.words(5),
-        assignees: [],
+        assignees: group.id,
         sharedTo: group.id,
         dueDate: new Date(),
         completed: false,
       };
-      todo.assignees.push(user.id);
       user.todos.push(todo.id);
       group.todos.push(todo.id);
       Todos.push(todo);
@@ -127,7 +127,17 @@ export const MockResolvers = {
       return Groups.find(isId);
     },
     messages(root, {groupId,userId}) {
-      return find(Messages, [{groupId:groupId} || {userId:userId}]);
+      let ret = [];
+      Messages.forEach(res => {
+        if (res.to === groupId || res.from === userId) {
+          ret.push(res);
+        }
+      });
+      ret.sort(function(a,b) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      console.log(ret);
+      return ret;
     },
     user(root, {id,email}) {
       function isIdorEmail(user) {
@@ -146,10 +156,10 @@ export const MockResolvers = {
     createMessage(root, { text, userId, groupId }) {
       let message = {
         id: (Math.floor(Math.random()*100)+200).toString(16),
+        to: groupId,
+        from: userId,
         text: text,
         createdAt: new Date(),
-        from: userId,
-        to: groupId,
       };
       Messages.push(message);
       return message;
@@ -157,12 +167,12 @@ export const MockResolvers = {
 
     markTodo(root, {id}) {
       function isId(todo) {
+        if (todo.id === id) {
+          todo.completed = !todo.completed;
+        }
         return todo.id === id;
-      }
-      return Todo.find(isId).then((todo) => {
-        todo.completed = !todo.completed;
-        return todo;
-      })
+      };
+      return Todos.find(isId)
     }
   },
   Group: {
@@ -170,26 +180,34 @@ export const MockResolvers = {
       return Users.filter(user => user.groups.includes(group.id))
     },
     messages(group) {
-      return Messages.filter(message => message.groupId === group.id);
+      let ret = Messages.filter(message => message.to === group.id);
+      ret.sort(function(a,b) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      console.log(ret);
+      return ret;
     },
   },
   Message: {
     to(message) {
       function isId(group) {
-        return group.id === message.groupId;
+        return group.id === message.to;
       }
       return Groups.find(isId);
     },
     from(message) {
       function isId(user) {
-        return user.id === message.userId;
+        return user.id === message.from;
       }
       return Users.find(isId);
     },
   },
   todo: {
     assignees(todo) {
-      return Users.filter(user => user.todos.includes(todo.id));
+      function isId(group) {
+        return group.id === todo.assignees;
+      }
+      return Groups.find(isId);
     },
     sharedTo(todo) {
       function isId(group) {
@@ -200,16 +218,24 @@ export const MockResolvers = {
   },
   User: {
     messages(user) {
-      return Messages.filter(message => message.userId === user.id);
+      return Messages.filter(message => message.from === user.id);
     },
     groups(user) {
-      return Groups.filter(group => group.users.includes(user.id));
+      let ret = [];
+      user.groups.forEach(res => {
+        ret = ret.concat(Groups.filter(group => group.id === res));
+      })
+      return ret;
     },
     friends(user) {
       return Users.filter(other => user.friends.includes(other.id));
     },
     todos(user) {
-      return Todos.filter(todo => todo.assignees.includes(user.id));
+      let ret = [];
+      user.todos.forEach(res => {
+        ret = ret.concat(Todos.filter(todo => todo.id === res));
+      });
+      return ret;
     },
   },
 };

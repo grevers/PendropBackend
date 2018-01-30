@@ -17,6 +17,16 @@ db.on('error', ()=> {
 
 db.once('open', () => {
   console.log(' +++Connected to mongoose+++ ');
+  var collections = _.keys(mongoose.connection.collections)
+  _.forEach(collections, function(collectionName, done) {
+    var collection = mongoose.connection.collections[collectionName];
+    collection.drop(function(err) {
+      if (err && err.message != 'ns not found') {
+        console.log(err);
+        return;
+      }
+    })
+  })
 });
 
 
@@ -49,8 +59,9 @@ var userSchema = new Schema({
 }, { collection: 'Users',strict: false,minimize: false });
 
 var todoSchema = new Schema({
+  title: String,
   text: String,
-  assignees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  assignees: { type: Schema.Types.ObjectId, ref: 'Group' },
   sharedTo: { type: Schema.Types.ObjectId, ref: 'Group' },
   dueDate: { type: Date, default: Date.now },
   completed: Boolean
@@ -99,13 +110,12 @@ _.times(GROUPS, () => {
         group.save();
       }));
       _.times(TODOS_PER_USER, () => Todo.create({
+        title: faker.lorem.words(2),
         text: faker.lorem.words(5),
         assignees: group._id,
         sharedTo: group._id,
         completed: false
       }).then((todo) => {
-        todo.assignees.addToSet(user._id);
-        todo.save();
         user.todos.addToSet(todo);
         user.save();
         group.todos.addToSet(todo);

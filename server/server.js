@@ -13,7 +13,7 @@ import { createServer } from 'http';
 import bodyParser from 'body-parser';
 
 import { schema } from './data/schema';
-import { Mocks } from './data/mocks';
+//import { Mocks } from './data/mocks';
 import { MockResolvers } from './mockResolvers';
 import { Resolvers } from './resolvers';
 
@@ -22,10 +22,10 @@ const GRAPHQL_PORT = 8000;
 
 app.use(bodyParser.json());
 
-//const mockExeSchema = makeExecutableSchema({
-//  typeDefs: schema,
-//  resolvers: MockResolvers,
-//});
+const mockExeSchema = makeExecutableSchema({
+  typeDefs: schema,
+  resolvers: MockResolvers,
+});
 
 const executableSchema = makeExecutableSchema({
   typeDefs: schema,
@@ -40,14 +40,14 @@ const executableSchema = makeExecutableSchema({
 //  preserveResolvers: true,
 //});
 
-//app.use('/testql', graphqlExpress({
-//  schema: mockExeSchema,
-//  context: {},
-//}));
+app.use('/testql', graphqlExpress({
+  schema: mockExeSchema,
+  context: {},
+}));
 
-//app.use('/testiql', graphiqlExpress({
-//  endpointURL: '/testql',
-//}));
+app.use('/testiql', graphiqlExpress({
+  endpointURL: '/testql',
+}));
 
 app.use('/graphql', graphqlExpress({
   schema: executableSchema,

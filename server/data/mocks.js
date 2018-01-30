@@ -26,7 +26,7 @@ export const Mocks = {
   Message: () => ({
     text: faker.lorem.sentences(Math.random() * 3),
   }),
-  TodoItem: () => ({
+  Todo: () => ({
     text: faker.lorem.words(Math.random() * 3),
   }),
 };

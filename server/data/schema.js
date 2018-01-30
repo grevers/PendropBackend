@@ -22,17 +22,18 @@ const schema = [`
   # a message sent from a user to a group
   type Message {
     id: ID!            # unique id for message
-    to: Group!        # group message was sent in
-    from: User!       # user who sent the message
+    to: Group        # group message was sent in
+    from: User       # user who sent the message
     text: String!     # message text
     createdAt: Date!  # when message was created
   }
   # todo item
   type todo {
     id: ID!
+    title: String
     text: String
-    assignees: [User]!
-    sharedTo: Group!
+    assignees: Group
+    sharedTo: Group
     dueDate: Date
     completed: Boolean
   }
@@ -60,7 +61,7 @@ const schema = [`
     ): Message
 
     #mark a todo complete or incomplete
-    markTodo(id: ID!): todo
+    markTodo(id: String!): todo
   }
 
   schema {
