@@ -9,55 +9,79 @@ import {
   addMockFunctionsToSchema,
 } from 'graphql-tools';
 
-import { createServer } from 'http';
 import bodyParser from 'body-parser';
+import { createServer } from 'http';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { execute, subscribe } from 'graphql';
 
-import { schema } from './data/schema';
-//import { Mocks } from './data/mocks';
-import { MockResolvers } from './mockResolvers';
-import { Resolvers } from './resolvers';
+import jwt from 'express-jwt';
+import { JWT_SECRET } from './config';
+import { User } from './connectors';
+
+import { executableSchema, mockExeSchema } from './data/schema';
+
+const GRAPHQL_PORT = 8000;
+const GRAPHQL_PATH = '/graphql';
+const TESTQL_PATH = '/testql';
+const SUBSCRIPTIONS_PATH = '/subscriptions';
 
 const app = express();
-const GRAPHQL_PORT = 8000;
 
 app.use(bodyParser.json());
 
-const mockExeSchema = makeExecutableSchema({
-  typeDefs: schema,
-  resolvers: MockResolvers,
-});
-
-const executableSchema = makeExecutableSchema({
-  typeDefs: schema,
-  resolvers: Resolvers,
-});
-
-//Comment out or remove the code below when using REAL DATA
-
-//addMockFunctionsToSchema({
-//  schema: mockExeSchema,
-//  mocks: Mocks,
-//  preserveResolvers: true,
-//});
-
-app.use('/testql', graphqlExpress({
+app.use('/testql', jwt({
+  secret: JWT_SECRET,
+  credentialsRequired: false,
+}), graphqlExpress(req => ({
   schema: mockExeSchema,
-  context: {},
-}));
+  context: {
+      user: req.user ?
+        User.findOne({ where: { id: req.user.id } }) : Promise.resolve(null),
+    },
+})));
 
 app.use('/testiql', graphiqlExpress({
-  endpointURL: '/testql',
+  endpointURL: TESTQL_PATH,
+  subscriptionsEndpoint: `ws://localhost:${TESTQL_PATH}${SUBSCRIPTIONS_PATH}`,
 }));
 
-app.use('/graphql', graphqlExpress({
+app.use('/graphql', jwt({
+  secret: JWT_SECRET,
+  credentialsRequired: false,
+}), graphqlExpress(req => ({
   schema: executableSchema,
-  context: {},
-}));
+  context: {user: req.user ?
+    User.findOne({ where: { id: req.user.id } }) : Promise.resolve(null),
+  },
+})));
 
 app.use('/graphiql', graphiqlExpress({
-  endpointURL: '/graphql',
+  endpointURL: GRAPHQL_PATH,
+  subscriptionsEndpoint: `ws://localhost:${GRAPHQL_PORT}${SUBSCRIPTIONS_PATH}`,
 }));
 
 const graphQLServer = createServer(app);
 
-graphQLServer.listen(GRAPHQL_PORT, () => console.log(`GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}`));
+graphQLServer.listen(GRAPHQL_PORT, () => {
+  console.log(`GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}${GRAPHQL_PATH}`);
+  console.log(`GraphQL Subscriptions are now running on ws://localhost:${GRAPHQL_PORT}${SUBSCRIPTIONS_PATH}`);
+});
+
+// eslint-disable-next-line no-unused-vars
+const subscriptionServer = SubscriptionServer.create({
+  schema: executableSchema,
+  execute,
+  subscribe,
+}, {
+  server: graphQLServer,
+  path: SUBSCRIPTIONS_PATH,
+});
+
+const testSubscriptionServer = SubscriptionServer.create({
+  schema: mockExeSchema,
+  execute,
+  subscribe,
+}, {
+  server: graphQLServer,
+  path: SUBSCRIPTIONS_PATH,
+});

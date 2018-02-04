@@ -1,6 +1,25 @@
+import { addMockFunctionsToSchema, makeExecutableSchema } from 'graphql-tools';
+//import { Mocks } from './mocks';
+import { Resolvers } from '../resolvers';
+import { MockResolvers } from '../mockResolvers';
+
 const schema = [`
   # declare custom scalars
   scalar Date
+
+  type MessageConnection {
+    edges: [MessageEdge]
+    pageInfo: PageInfo!
+  }
+  type MessageEdge {
+    cursor: String!
+    node: Message!
+  }
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+  }
+
   # a group chat entity
   type Group {
     id: ID!            # unique id for the group
@@ -17,7 +36,8 @@ const schema = [`
     messages: [Message] # messages sent by user
     groups: [Group]     # groups the user belongs to
     friends: [User]     # user's friends/contacts
-    todos: [todo]
+    todos: [todo]       # user's todo list
+    jwt: String         # json web token for access
   }
   # a message sent from a user to a group
   type Message {
@@ -56,18 +76,45 @@ const schema = [`
 
   type Mutation {
     #send a message to a group
-    createMessage(
-      text: String!, userId: String!, groupId: String!
-    ): Message
-
+    createMessage(text: String!, groupId: String!): Message
+    createGroup(name: String!, userIds: [String]): Group
+    deleteGroup(id: String!): Group
+    leaveGroup(id: String!): Group # let user leave group
+    updateGroup(id: String!, name: String): Group
     #mark a todo complete or incomplete
     markTodo(id: String!): todo
+    login(email: String!, password: String!): User
+    signup(email: String!, password: String!, username: String): User
+  }
+
+  type Subscription {
+    # Subscription fires on every message added
+    # for any of the groups with one of these groupIds
+    messageAdded(userId: String, groupIds: [String]): Message
+    groupAdded(userId: String): Group
   }
 
   schema {
     query: Query
     mutation: Mutation
+    subscription: Subscription
   }
 `];
 
-export { schema };
+export const executableSchema = makeExecutableSchema({
+  typeDefs: schema,
+  resolvers: Resolvers,
+});
+
+export const mockExeSchema = makeExecutableSchema({
+  typeDefs: schema,
+  resolvers: MockResolvers,
+});
+
+// addMockFunctionsToSchema({
+//   schema: executableSchema,
+//   mocks: Mocks,
+//   preserveResolvers: true,
+// });
+
+export default executableSchema;

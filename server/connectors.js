@@ -1,5 +1,6 @@
 import faker from 'faker';
 import { _ } from 'lodash';
+import bcrypt from 'bcrypt';
 
 import mongoose from 'mongoose';
 
@@ -86,10 +87,10 @@ _.times(GROUPS, () => {
     name: faker.lorem.words(3),
   }).then(group => _.times(USERS_PER_GROUP, () => {
     const password = faker.internet.password();
-    return group.model('User').create({
+    return bcrypt.hash(password, 10).then(hash => group.model('User').create({
       email: faker.internet.email(),
       username: faker.internet.userName(),
-      password,
+      password: hash,
     }).then((user) => {
       console.log(
         '{email, username, password}',
@@ -126,7 +127,7 @@ _.times(GROUPS, () => {
       group.users.addToSet(user._id);
       group.save();
       return user;
-    });
+    }));
   })).then((userPromises) => {
     Promise.all(userPromises).then((users) => {
       _.each(users, (current, i) => {
