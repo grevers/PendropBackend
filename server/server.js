@@ -18,7 +18,7 @@ import { MockResolvers } from './mockResolvers';
 import { Resolvers } from './resolvers';
 
 const app = express();
-const GRAPHQL_PORT = 8000;
+const GRAPHQL_PORT = 8080;
 
 app.use(bodyParser.json());
 
@@ -31,14 +31,6 @@ const executableSchema = makeExecutableSchema({
   typeDefs: schema,
   resolvers: Resolvers,
 });
-
-//Comment out or remove the code below when using REAL DATA
-
-//addMockFunctionsToSchema({
-//  schema: mockExeSchema,
-//  mocks: Mocks,
-//  preserveResolvers: true,
-//});
 
 app.use('/testql', graphqlExpress({
   schema: mockExeSchema,

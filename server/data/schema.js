@@ -5,15 +5,16 @@ const schema = [`
   type Group {
     id: ID!            # unique id for the group
     name: String        # name of the group
-    users: [User]!      # users in the group
+    users: [User]      # users in the group
     messages: [Message] # messages sent to the group
     todos: [todo]
   }
   # a user -- keep type really simple for now
   type User {
-    id: ID!         # unique id for the user
+    id: ID!             # unique id for the user
     email: String!      # we will also require a unique email per user
     username: String    # this is the name we'll show other users
+    image: String       # http link to image url
     messages: [Message] # messages sent by user
     groups: [Group]     # groups the user belongs to
     friends: [User]     # user's friends/contacts
@@ -60,8 +61,32 @@ const schema = [`
       text: String!, userId: String!, groupId: String!
     ): Message
 
+    createGroup(
+      name: String, users: [String]
+    ): Group
+
+    editGroup(
+      groupId: String!, name: String, users: [String]
+    ): Group
+
+    createTodo(
+      title: String, text: String, sharedTo: [String], assignees: [String], dueDate: Date
+    ): todo
+
+    editTodo(
+      todoId: String!, title: String, text: String, sharedTo: [String], assignees: [String], dueDate: Date
+    ): todo
+
+    addFriend(
+      userId: String!, friendId: String!
+    ): User
+
     #mark a todo complete or incomplete
     markTodo(id: String!): todo
+
+    login(email: String!, password: String!): User
+
+    signup(email: String!, password: String!): User
   }
 
   schema {

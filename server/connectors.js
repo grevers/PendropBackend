@@ -51,8 +51,8 @@ var messageSchema = new Schema({
 var userSchema = new Schema({
   email: String,
   username: String,
+  image: String,
   password: String,
-  messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
   groups: [{ type: Schema.Types.ObjectId, ref: 'Group' }],
   friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   todos: [{ type: Schema.Types.ObjectId, ref: 'Todo' }]
@@ -89,6 +89,7 @@ _.times(GROUPS, () => {
     return group.model('User').create({
       email: faker.internet.email(),
       username: faker.internet.userName(),
+      image: faker.image.imageUrl(400,400,"people"),
       password,
     }).then((user) => {
       console.log(
@@ -104,8 +105,6 @@ _.times(GROUPS, () => {
         message.set('groupId', group._id);
         message.set('userId', user._id);
         message.save();
-        user.messages.addToSet(message._id);
-        user.save();
         group.messages.addToSet(message._id);
         group.save();
       }));
@@ -114,6 +113,7 @@ _.times(GROUPS, () => {
         text: faker.lorem.words(5),
         assignees: group._id,
         sharedTo: group._id,
+        dueDate: new Date(),
         completed: false
       }).then((todo) => {
         user.todos.addToSet(todo);

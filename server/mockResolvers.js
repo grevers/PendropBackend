@@ -38,7 +38,7 @@ Groups.forEach((group) => {
       id: (Math.floor(Math.random()*100)+20).toString(16),
       email: faker.internet.email(),
       username: faker.internet.userName(),
-      messages: [],
+      image: faker.image.imageUrl(400,400,"people"),
       groups: [],
       friends: [],
       todos: [],
@@ -68,7 +68,6 @@ Groups.forEach((group) => {
     });
 
     Messages.forEach((message) => {
-      user.messages.push(message.id);
       group.messages.push(message.id);
     });
 
@@ -136,7 +135,6 @@ export const MockResolvers = {
       ret.sort(function(a,b) {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
-      console.log(ret);
       return ret;
     },
     user(root, {id,email}) {
@@ -184,7 +182,6 @@ export const MockResolvers = {
       ret.sort(function(a,b) {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
-      console.log(ret);
       return ret;
     },
   },
