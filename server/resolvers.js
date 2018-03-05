@@ -5,6 +5,9 @@ import mongoose from 'mongoose';
 mongoose.Promise = require("bluebird");
 
 import { withFilter } from 'graphql-subscriptions';
+import { map } from 'lodash';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 import { Group, Message, User, Todo } from './connectors';
 import { pubsub } from './subscriptions';
@@ -54,16 +57,24 @@ export const Resolvers = {
     },
   },
   Mutation: {
-    createMessage(root, { text, userId, groupId }) {
-      return Message.create({
-        text: text,
-        from: userId,
-        to: groupId,
-      }).then((message) => {
-        // publish subscription notification with the whole message
-        pubsub.publish(MESSAGE_ADDED_TOPIC, { [MESSAGE_ADDED_TOPIC]: message });
-        return message
-      })
+    createMessage(_, { groupId, text }, ctx) {
+      if (!ctx.user) {
+        return Promise.reject('Unauthorized');
+      }
+      return ctx.user.then((user)=> {
+        if(!user) {
+          return Promise.reject('Unauthorized');
+        }
+        return Message.create({
+          userId: user.id,
+          text,
+          groupId,
+        }).then((message) => {
+          // Publish subscription notification with the whole message
+          pubsub.publish('messageAdded', message);
+          return message;
+        });
+      });
     },
     createGroup(_, args, ctx) {
       return groupLogic.createGroup(_, args, ctx).then((group) => {
@@ -82,7 +93,7 @@ export const Resolvers = {
     },
     login(_, { email, password }, ctx) {
       // find user by email
-      return User.findOne({ where: { email } }).then((user) => {
+      return User.findOne({ 'email': email }).then((user) => {
         if (user) {
           // validate password
           return bcrypt.compare(password, user.password).then((res) => {
@@ -181,16 +192,10 @@ export const Resolvers = {
   },
   todo: {
     assignees(todo) {
-      return Todo.findById(todo.id).populate('assignees').exec()
-      .then((todo) => {
-        return todo.assignees;
-      });
+      return todoLogic.assignees(todo, args, ctx);
     },
     sharedTo(todo) {
-      return Todo.findById(todo.id).populate('sharedTo').exec()
-      .then((todo) => {
-        return todo.sharedTo;
-      });
+      return todoLogic.sharedTo(todo, args, ctx);
     },
   },
   User: {
@@ -210,11 +215,7 @@ export const Resolvers = {
       return userLogic.messages(user, args, ctx);
     },
     todos(user) {
-      return User.findById(user.id).populate('todos').exec()
-      .then((user) => {
-        console.log(user.todos);
-        return user.todos;
-      });
+      return userLogic.todos(user, args, ctx);
     },
   },
 };

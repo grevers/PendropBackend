@@ -36,7 +36,7 @@ app.use('/testql', jwt({
   schema: mockExeSchema,
   context: {
       user: req.user ?
-        User.findOne({ where: { id: req.user.id } }) : Promise.resolve(null),
+        User.findOne({ where: { id: req.user.id, version: req.user.version } }) : Promise.resolve(null),
     },
 })));
 
@@ -51,13 +51,12 @@ app.use('/graphql', jwt({
 }), graphqlExpress(req => ({
   schema: executableSchema,
   context: {user: req.user ?
-    User.findOne({ where: { id: req.user.id } }) : Promise.resolve(null),
+    User.findOne({ where: { id: req.user.id, version: req.user.version } }) : Promise.resolve(null),
   },
 })));
 
 app.use('/graphiql', graphiqlExpress({
-  endpointURL: GRAPHQL_PATH,
-  subscriptionsEndpoint: `ws://localhost:${GRAPHQL_PORT}${SUBSCRIPTIONS_PATH}`,
+  endpointURL: GRAPHQL_PATH
 }));
 
 const graphQLServer = createServer(app);

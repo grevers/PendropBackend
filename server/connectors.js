@@ -56,7 +56,8 @@ var userSchema = new Schema({
   messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
   groups: [{ type: Schema.Types.ObjectId, ref: 'Group' }],
   friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  todos: [{ type: Schema.Types.ObjectId, ref: 'Todo' }]
+  todos: [{ type: Schema.Types.ObjectId, ref: 'Todo' }],
+  version: Number
 }, { collection: 'Users',strict: false,minimize: false });
 
 var todoSchema = new Schema({
@@ -91,6 +92,7 @@ _.times(GROUPS, () => {
       email: faker.internet.email(),
       username: faker.internet.userName(),
       password: hash,
+      version: 1,
     }).then((user) => {
       console.log(
         '{email, username, password}',

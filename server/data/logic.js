@@ -1,4 +1,4 @@
-import { Group, Message, User } from '../connectors';
+import { Group, Message, Todo, User } from '../connectors';
 
 // reusable function to check for a user with context
 function getAuthenticatedUser(ctx) {
@@ -40,7 +40,18 @@ export const messageLogic = {
 };
 
 export const todoLogic = {
-
+  assignees(todo) {
+    return Todo.findById(todo.id).populate('assignees').exec()
+    .then((todo) => {
+      return todo.assignees;
+    });
+  },
+  sharedTo(todo) {
+    return Todo.findById(todo.id).populate('sharedTo').exec()
+    .then((todo) => {
+      return todo.sharedTo;
+    });
+  },
 };
 
 export const groupLogic = {
@@ -203,7 +214,10 @@ export const userLogic = {
         return Promise.reject('Unauthorized');
       }
 
-      return user.friends;
+      return User.findById(user.id).populate('friends').exec()
+      .then((user) => {
+        return user.friends;
+      });
     });
   },
   groups(user, args, ctx) {
@@ -212,11 +226,23 @@ export const userLogic = {
         return Promise.reject('Unauthorized');
       }
 
-      return user.groups;
+      return User.findById(user.id).populate('groups').exec()
+      .then((user) => {
+        return user.groups;
+      });
     });
   },
   todos(user, args, ctx) {
+    return getAuthenticatedUser(ctx).then((currentUser) => {
+      if (currentUser.id !== user.id) {
+        return Promise.reject('Unauthorized');
+      }
 
+      return User.findById(user.id).populate('todos').exec()
+      .then((user) => {
+        return user.todos;
+      });
+    });
   },
   jwt(user) {
     return Promise.resolve(user.jwt);
@@ -227,9 +253,9 @@ export const userLogic = {
         return Promise.reject('Unauthorized');
       }
 
-      return Message.findAll({
-        where: { userId: user.id },
-        order: [['createdAt', 'DESC']],
+      return User.findById(user.id).populate('messages').exec()
+      .then((user) => {
+        return user.messages;
       });
     });
   },
