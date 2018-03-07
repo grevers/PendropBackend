@@ -44,7 +44,7 @@ Groups.forEach((group) => {
       todos: [],
       password: password,
     };
-    user.groups.push(group.id);
+    user.groups.push(group);
     Users.push(user);
     group.users.push(user);
   });
@@ -81,8 +81,8 @@ Groups.forEach((group) => {
         dueDate: new Date(),
         completed: false,
       };
-      user.todos.push(todo.id);
-      group.todos.push(todo.id);
+      user.todos.push(todo);
+      group.todos.push(todo);
       Todos.push(todo);
     });
   })
@@ -91,7 +91,7 @@ Groups.forEach((group) => {
 _.each(Users, (current, j) => {
   _.each(Users, (user, k) => {
     if (j !== k) {
-      current.friends.push(user.id);
+      current.friends.push(user);
     }
   });
 });
@@ -171,11 +171,42 @@ export const MockResolvers = {
         return todo.id === id;
       };
       return Todos.find(isId)
+    },
+
+    login(root, {email,password}) {
+      function verify(user) {
+        if (user.email === email) {
+          return user.password === password
+        }
+      }
+      return Users.find(verify);
+    },
+
+    signup(root, {email,password}) {
+      function exists(user) {
+        if (user.email === email) {
+          return user.password === password
+        }
+      }
+      if (!Users.find(verify)) {
+        let user = {
+          id: (Math.floor(Math.random()*100)+20).toString(16),
+          email: email,
+          username: faker.internet.userName(),
+          image: faker.image.imageUrl(400,400,"people"),
+          groups: [],
+          friends: [],
+          todos: [],
+          password: password,
+        };
+        Users.push(user);
+      }
     }
   },
   Group: {
     users(group) {
-      return Users.filter(user => user.groups.includes(group.id))
+      Users.filter(user => user.groups.includes(group.id));
+      return group.users;
     },
     messages(group) {
       let ret = Messages.filter(message => message.to === group.id);
@@ -222,17 +253,19 @@ export const MockResolvers = {
       user.groups.forEach(res => {
         ret = ret.concat(Groups.filter(group => group.id === res));
       })
-      return ret;
+      return user.groups;
     },
     friends(user) {
-      return Users.filter(other => user.friends.includes(other.id));
+      Users.filter(other => user.friends.includes(other.id));
+      return user.friends;
     },
     todos(user) {
       let ret = [];
       user.todos.forEach(res => {
+        //console.log(Todos.filter(todo => todo.id === res));
         ret = ret.concat(Todos.filter(todo => todo.id === res));
       });
-      return ret;
+      return user.todos;
     },
   },
-};
+}
