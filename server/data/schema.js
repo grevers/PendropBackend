@@ -15,6 +15,7 @@ const schema = [`
     email: String!      # we will also require a unique email per user
     username: String    # this is the name we'll show other users
     image: String       # http link to image url
+    pushToken: String   # expoPushToken
     messages: [Message] # messages sent by user
     groups: [Group]     # groups the user belongs to
     friends: [User]     # user's friends/contacts

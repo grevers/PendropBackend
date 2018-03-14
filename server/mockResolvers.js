@@ -43,6 +43,7 @@ Groups.forEach((group) => {
       friends: [],
       todos: [],
       password: password,
+	  pushToken: 'ExponentPushToken[9GgsmYFuKeivuscb1D4Dd9]'
     };
     user.groups.push(group);
     Users.push(user);
@@ -50,8 +51,8 @@ Groups.forEach((group) => {
   });
   Users.forEach((user) => {
     console.log(
-      '{email, username, password}',
-      `{${user.email}, ${user.username}, ${user.password}}`
+      '{email, username, password, pushToken}',
+      `{${user.email}, ${user.username}, ${user.password}, ${user.pushToken}`
     );
     _.times(MESSAGES_PER_USER, () => {
       let message = {
