@@ -34,7 +34,7 @@ const schema = [`
     id: ID!
     title: String
     text: String
-    assignees: Group
+    assignees: [User]
     sharedTo: Group
     dueDate: Date
     completed: Boolean
@@ -71,11 +71,11 @@ const schema = [`
     ): Group
 
     createTodo(
-      title: String, text: String, sharedTo: [String], assignees: [String], dueDate: Date
+      title: String, text: String, sharedTo: String, assignees: [String], dueDate: String
     ): todo
 
     editTodo(
-      todoId: String!, title: String, text: String, sharedTo: [String], assignees: [String], dueDate: Date
+      id: ID!, title: String, text: String, sharedTo: String!, assignees: [String], dueDate: String
     ): todo
 
     addFriend(

@@ -93,7 +93,21 @@ export const Resolvers = {
         text: text,
         sharedTo: sharedTo,
         assignees: assignees,
-        dueDate: dueDate ? dueDate : new Date()
+        dueDate: dueDate ? new Date(dueDate) : new Date()
+      }).then(todo => {
+        Group.findById(sharedTo).populate('todos').exec()
+        .then((group) => {
+          group.todos.addToSet(todo);
+          group.save();
+        })
+        assignees.forEach((userId) => {
+          User.findById(userId).populate('todos').exec()
+          .then((user) => {
+            user.todos.addToSet(todo);
+            user.save();
+          })
+          return todo;
+        })
       });
     },
 

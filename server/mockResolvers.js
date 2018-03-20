@@ -77,11 +77,12 @@ Groups.forEach((group) => {
         id: (Math.floor(Math.random()*100)+300).toString(16),
         title: faker.lorem.words(2),
         text: faker.lorem.words(5),
-        assignees: group.id,
+        assignees: [],
         sharedTo: group.id,
         dueDate: new Date(),
         completed: false,
       };
+      todo.assignees.push(user);
       user.todos.push(todo);
       group.todos.push(todo);
       Todos.push(todo);
@@ -162,6 +163,32 @@ export const MockResolvers = {
       };
       Messages.push(message);
       return message;
+    },
+
+    createTodo(root, { title, text, sharedTo, assignees, dueDate }) {
+      let todo = {
+        id: (Math.floor(Math.random()*100)+300).toString(16),
+        title: title,
+        text: text,
+        sharedTo: sharedTo,
+        assignees: assignees,
+        dueDate: new Date(dueDate),
+        completed: false,
+      };
+      Groups.find(item => {
+        if (item.id == sharedTo) {
+          item.todos.push(todo);
+        }
+      })
+      assignees.forEach(item => {
+        Users.find(user => {
+          if (user.id == item) {
+            user.todos.push(todo);
+          }
+        });
+      })
+      Todos.push(todo);
+      return todo;
     },
 
     markTodo(root, {id}) {
